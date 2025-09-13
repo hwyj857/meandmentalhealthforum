@@ -1,6 +1,7 @@
 import { initAuth, onAuthChange } from './auth.js';
 import { showForumView } from './forum.js';
 import { showBlogView } from './blog.js';
+import { showChatroomView } from './chatroom.js';
 
 const homeTab = document.getElementById('home-tab');
 const forumTab = document.getElementById('forum-tab');
@@ -12,19 +13,23 @@ const forumContent = document.createElement('div');
 forumContent.id = 'forum-content';
 const blogContent = document.createElement('div');
 blogContent.id = 'blog-content';
+const chatroomContent = document.createElement('div');
+chatroomContent.id = 'chatroom-content';
 
-document.getElementById('content-container').append(forumContent, blogContent);
+document.getElementById('content-container').append(forumContent, blogContent, chatroomContent);
 
 let currentUser = null;
 
 // handle tab switching
 function switchTab(activeTab) {
+    console.log('switching tab to:', activeTab.id);
     document.querySelectorAll('nav a').forEach(a => a.classList.remove('active-tab'));
     activeTab.classList.add('active-tab');
 
     homeContent.style.display = 'none';
     forumContent.style.display = 'none';
     blogContent.style.display = 'none';
+    chatroomContent.style.display = 'none';
 
     if (activeTab === homeTab) {
         homeContent.style.display = 'block';
@@ -34,15 +39,23 @@ function switchTab(activeTab) {
     } else if (activeTab === blogTab) {
         blogContent.style.display = 'block';
         showBlogView(currentUser, blogContent);
+    } else if (activeTab === chatroomTab) {
+        chatroomContent.style.display = 'block';
+        showChatroomView(currentUser, chatroomContent);
+    } else if (activeTab === communityTab) {
+        communityContent.style.display = 'block';
+        showCommunityView(currentUser, communityContent);
     }
 }
 
 // initial setup
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('dom content loaded');
     initAuth();
 
     onAuthChange(user => {
         currentUser = user;
+        console.log('auth state changed, user:', user);
         // load initial view (home)
         switchTab(homeTab);
     });
@@ -61,8 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         switchTab(blogTab);
     });
-});
-ventDefault();
+
+    chatroomTab.addEventListener('click', (e) => {
+        e.preventDefault();
         switchTab(chatroomTab);
     });
 });
