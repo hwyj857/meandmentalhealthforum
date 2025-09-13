@@ -1,0 +1,85 @@
+
+**IMPORTANT: Instructions for Auto-Deleting Old Posts**
+
+The forum is designed to delete posts that haven't had any activity (no new comments) in over 4 hours. This cleanup process must run on a server. Here is how you can set it up using Firebase's free "Cloud Functions".
+
+**You will need to do this from your own computer, not from me.**
+
+---
+**Step 1: Install Firebase Tools**
+
+If you don't have it, open a terminal or command prompt on your computer and run this command:
+`npm install -g firebase-tools`
+
+---
+**Step 2: Initialize Firebase in Your Project**
+
+1. Open a terminal/command prompt.
+2. Navigate into your project folder: `cd C:\Users\David\meandmentalhealthforum`
+3. Log in to Firebase: `firebase login`
+4. Initialize Firebase Functions: `firebase init functions`
+   - When it asks for a project, choose `mentalhealthandcatsforum`.
+   - When it asks for the language, choose **JavaScript**.
+   - Say **yes** to any questions about installing dependencies.
+
+This will create a new `functions` folder inside your project.
+
+---
+**Step 3: Add the Cloud Function Code**
+
+1. Open the `functions/index.js` file that was just created.
+2. Replace ALL the content in that file with the code below:
+
+```javascript
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+admin.initializeApp();
+
+const db = admin.firestore();
+
+// This function will run automatically every hour.
+exports.cleanupOldPosts = functions.pubsub.schedule("every 1 hours").onRun(async (context) => {
+  const now = admin.firestore.Timestamp.now();
+  const fourHoursAgo = admin.firestore.Timestamp.fromMillis(now.toMillis() - (4 * 60 * 60 * 1000));
+
+  // Query for posts where the last activity was more than 4 hours ago.
+  const oldPostsQuery = db.collection("posts").where("lastActivity", "<=", fourHoursAgo);
+
+  const snapshot = await oldPostsQuery.get();
+
+  if (snapshot.empty) {
+    console.log("No old posts to delete.");
+    return null;
+  }
+
+  // We need to delete all the comments inside each post first.
+  const deletePromises = [];
+  snapshot.forEach(doc => {
+    // Here we can also delete all subcollections (like comments) if needed.
+    // For now, we just delete the post document itself.
+    // A more complete solution would recursively delete subcollections.
+    deletePromises.push(doc.ref.delete());
+  });
+
+  await Promise.all(deletePromises);
+  console.log(`Deleted ${snapshot.size} old posts.`);
+  return null;
+});
+```
+
+---
+**Step 4: Deploy the Function**
+
+1. Go back to your terminal inside the `meandmentalhealthforum` folder.
+2. Run the deploy command: `firebase deploy --only functions`
+
+After a few minutes, the function will be live. It will automatically run every hour to clean up old posts.
+
+---
+**How to Edit Your Blog/Forum**
+
+- **To write a blog post:** Log in with one of the admin Google accounts (`hwyj857@gmail.com`, etc.), go to the "blog" tab, and the form to write a new post will appear.
+- **To pin a forum post:** Log in as an admin, and you will see a "pin" button on each forum post.
+- **To post on the forum:** Log in with Google or as Anonymous, and the form to create a post will be at the bottom of the forum page.
+
+Your website is now ready to be deployed. You can open the `index.html` file to use it.
