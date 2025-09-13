@@ -126,10 +126,8 @@ function renderNewPostForm(container) {
         let newPostNumber = 1;
         if (postCounterSnap.exists()) {
             newPostNumber = postCounterSnap.data().count + 1;
-            await updateDoc(postCounterRef, { count: newPostNumber });
-        } else {
-            await setDoc(postCounterRef, { count: newPostNumber });
         }
+        await setDoc(postCounterRef, { count: newPostNumber }, { merge: true }); // Use setDoc with merge: true to create or update
 
         await addDoc(collection(db, "posts"), {
             postNumber: newPostNumber,
