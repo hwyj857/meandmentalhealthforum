@@ -4,9 +4,9 @@ import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "ht
 const contentContainer = document.getElementById('content-container');
 let currentUser = null;
 
-async function renderBlogPosts() {
+async function renderBlogPosts(container) {
     const postsContainer = document.createElement('div');
-    contentContainer.appendChild(postsContainer);
+    container.appendChild(postsContainer);
 
     const blogQuery = query(collection(db, "blogPosts"), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(blogQuery);
@@ -62,4 +62,6 @@ export function showBlogView(user, container) {
     contentContainer.innerHTML = '<h2>blog</h2>';
     renderNewBlogPostForm();
     renderBlogPosts();
+}
+iner);
 }

@@ -8,11 +8,11 @@ let currentUser = null;
 let lastVisiblePost = null;
 let isLoading = false;
 
-async function renderPosts(category = null, searchTerm = null) {
+async function renderPosts(category = null, searchTerm = null, container) {
     if (isLoading) return;
     isLoading = true;
 
-    const postsContainer = document.getElementById('posts-container');
+    const postsContainer = container.querySelector('#posts-container');
     if (!lastVisiblePost) {
         postsContainer.innerHTML = ''; // Clear for new query
 
@@ -90,6 +90,185 @@ async function renderPosts(category = null, searchTerm = null) {
         postsContainer.appendChild(postEl);
     }
     isLoading = false;
+}
+
+function renderNewPostForm(container) {
+    const newPostContainer = container.querySelector('#new-post-container');
+    if (!currentUser) {
+        newPostContainer.innerHTML = '';
+        return;
+    }
+    newPostContainer.innerHTML = `
+        <h4>create a new post</h4>
+        <select id="post-category">
+            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <textarea id="post-text" placeholder="your post..."></textarea>
+        <input type="file" id="post-image" accept="image/*">
+        <button id="submit-post">submit</button>
+    `;
+
+    newPostContainer.querySelector('#submit-post').addEventListener('click', async () => {
+        const text = newPostContainer.querySelector('#post-text').value;
+        const category = newPostContainer.querySelector('#post-category').value;
+        const imageFile = newPostContainer.querySelector('#post-image').files[0];
+
+        if (!text) {
+            alert('post text cannot be empty.');
+            return;
+        }
+
+        let imageUrl = null;
+        if (imageFile) {
+            const storageRef = ref(storage, `images/${Date.now()}_${imageFile.name}`);
+            await uploadBytes(storageRef, imageFile);
+            imageUrl = await getDownloadURL(storageRef);
+        }
+
+        // This is a simplified way to get a unique post number. 
+        // A more robust solution would use a Cloud Function transaction.
+        const postCounterRef = doc(db, "internal", "postCounter");
+        const postCounterSnap = await getDoc(postCounterRef);
+        const newPostNumber = (postCounterSnap.exists() ? postCounterSnap.data().count : 0) + 1;
+        await updateDoc(postCounterRef, { count: newPostNumber });
+
+        await addDoc(collection(db, "posts"), {
+            postNumber: newPostNumber,
+            authorName: currentUser.displayName,
+            authorId: currentUser.uid,
+            text,
+            category,
+            imageUrl,
+            createdAt: serverTimestamp(),
+            lastActivity: serverTimestamp(),
+            commentCount: 0
+        });
+
+        newPostContainer.querySelector('#post-text').value = '';
+        newPostContainer.querySelector('#post-image').value = '';
+        lastVisiblePost = null; // Reset for refresh
+        renderPosts(null, null, container);
+    });
+}
+
+async function toggleComments(postId, container) {
+    const commentsContainer = container.querySelector(`#comments-${postId}`);
+    if (commentsContainer.style.display === 'none') {
+        commentsContainer.style.display = 'block';
+        commentsContainer.innerHTML = 'loading comments...';
+
+        const commentsQuery = query(collection(db, `posts/${postId}/comments`), orderBy("createdAt", "asc"));
+        const querySnapshot = await getDocs(commentsQuery);
+        
+        commentsContainer.innerHTML = ''; // Clear loading text
+
+        querySnapshot.forEach(commentDoc => {
+            const comment = commentDoc.data();
+            const commentEl = document.createElement('div');
+            commentEl.className = 'comment';
+            commentEl.innerHTML = `
+                <b>${comment.authorName}:</b>
+                <p>${comment.text}</p>
+            `;
+            commentsContainer.appendChild(commentEl);
+        });
+
+        if (currentUser) {
+            const newCommentForm = document.createElement('div');
+            newCommentForm.innerHTML = `
+                <textarea id="new-comment-${postId}" placeholder="add a comment..."></textarea>
+                <button id="submit-comment-${postId}">submit</button>
+            `;
+            commentsContainer.appendChild(newCommentForm);
+
+            commentsContainer.querySelector(`#submit-comment-${postId}`).addEventListener('click', async () => {
+                const text = commentsContainer.querySelector(`#new-comment-${postId}`).value;
+                if (!text) return;
+
+                await addDoc(collection(db, `posts/${postId}/comments`), {
+                    authorName: currentUser.displayName,
+                    authorId: currentUser.uid,
+                    text,
+                    createdAt: serverTimestamp()
+                });
+
+                // Update lastActivity and commentCount on parent post
+                const postRef = doc(db, "posts", postId);
+                const postSnap = await getDoc(postRef);
+                const currentCount = postSnap.data().commentCount || 0;
+                await updateDoc(postRef, { 
+                    lastActivity: serverTimestamp(),
+                    commentCount: currentCount + 1
+                });
+
+                toggleComments(postId, container); // Refresh comments
+                toggleComments(postId, container);
+            });
+        }
+
+    } else {
+        commentsContainer.style.display = 'none';
+    }
+}
+
+export function showForumView(user, container) {
+    currentUser = user;
+    let forumHtml = `
+        <div id="forum-header">
+            <div id="category-links">
+                <a href="#" data-category="all">all</a>
+                ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+        </div>
+        <textarea id="post-text" placeholder="your post..."></textarea>
+        <input type="file" id="post-image" accept="image/*">
+        <button id="submit-post">submit</button>
+    `;
+    container.innerHTML = forumHtml;
+
+    container.querySelector('#category-links').addEventListener('click', e => {
+        if (e.target.tagName === 'A') {
+            e.preventDefault();
+            const category = e.target.dataset.category === 'all' ? null : e.target.dataset.category;
+            lastVisiblePost = null; // Reset pagination
+            renderPosts(category, null, container);
+        }
+    });
+
+    container.querySelector('#search-button').addEventListener('click', () => {
+        const searchTerm = container.querySelector('#search-input').value;
+        if (searchTerm) {
+            lastVisiblePost = null; // Reset pagination
+            // This is a simplified search. For full-text search, a service like Algolia is recommended.
+            renderPosts(null, searchTerm, container);
+        }
+    });
+
+    container.querySelector('#posts-container').addEventListener('click', async e => {
+        if (e.target.classList.contains('comment-link')) {
+            e.preventDefault();
+            toggleComments(e.target.dataset.id, container);
+        }
+        if (e.target.classList.contains('pin-post')) {
+            e.preventDefault();
+            const postId = e.target.dataset.id;
+            const postRef = doc(db, "posts", postId);
+            const postSnap = await getDoc(postRef);
+            const isPinned = postSnap.data().pinned || false;
+            await updateDoc(postRef, { pinned: !isPinned });
+            lastVisiblePost = null; // Refresh
+            renderPosts(null, null, container);
+        }
+    });
+
+    window.onscroll = () => {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 2) {
+            renderPosts(null, null, container); // Load more on scroll
+        }
+    };
+
+    renderNewPostForm(container);
+    renderPosts(null, null, container);
 }
 
 function renderNewPostForm() {

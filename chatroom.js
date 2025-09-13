@@ -30,9 +30,9 @@ function renderChatInput(container) {
         <button id="send-chat-message">send</button>
     `;
 
-    document.getElementById('send-chat-message').addEventListener('click', () => {
-        const messageInput = document.getElementById('chat-message-input');
-        const customNameInput = document.getElementById('custom-name');
+    container.querySelector('#send-chat-message').addEventListener('click', () => {
+        const messageInput = container.querySelector('#chat-message-input');
+        const customNameInput = container.querySelector('#custom-name');
         const text = messageInput.value;
         let authorName = customNameInput.value || currentUser.displayName;
 
@@ -52,7 +52,8 @@ function listenForMessages(container) {
     const chatQuery = query(collection(db, "chatroom"), orderBy("createdAt", "desc"), limitToLast(40));
 
     onSnapshot(chatQuery, (snapshot) => {
-        container.innerHTML = '';
+        const messagesContainer = container.querySelector('#chat-messages');
+        messagesContainer.innerHTML = '';
         const messages = [];
         snapshot.forEach(doc => messages.push(doc.data()));
         
@@ -61,7 +62,7 @@ function listenForMessages(container) {
             const msgEl = document.createElement('div');
             msgEl.className = 'chat-message';
             msgEl.innerHTML = `<b>${msg.authorName}:</b> ${msg.text}`;
-            container.appendChild(msgEl);
+            messagesContainer.appendChild(msgEl);
         });
 
         // Play sound if the new message isn't from the current user
@@ -69,7 +70,7 @@ function listenForMessages(container) {
             dingSound.play().catch(e => console.log("sound play failed. user interaction needed."));
         }
 
-        container.scrollTop = container.scrollHeight;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 }
 
