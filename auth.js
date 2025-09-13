@@ -19,15 +19,13 @@ function renderAuthUI(user) {
 
         authContainer.append(welcome, logoutButton);
     } else {
-        const googleButton = document.createElement('button');
-        googleButton.textContent = 'login with google';
-        googleButton.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-
-        const anonButton = document.createElement('button');
-        anonButton.textContent = 'login as anonymous';
-        anonButton.onclick = () => signInAnonymously(auth);
-
-        authContainer.append(googleButton, anonButton);
+        authContainer.innerHTML = `
+            <p>please log in or continue anonymously to use the forum.</p>
+            <button id="google-login-button">login with google</button>
+            <button id="anonymous-login-button">login as anonymous</button>
+        `;
+        authContainer.querySelector('#google-login-button').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+        authContainer.querySelector('#anonymous-login-button').onclick = () => signInAnonymously(auth);
     }
 }
 

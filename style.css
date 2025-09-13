@@ -119,6 +119,18 @@ button:hover { background-color: #c3b091; }
 }
 
 /* auth */
+#auth-container {
+    margin-top: 1em;
+    padding: 0.5em;
+    border: 1px solid #a08c6e;
+    background-color: #e5d8c4;
+}
+
+#auth-container p {
+    margin: 0 0 0.5em 0;
+    font-size: 0.9em;
+}
+
 #auth-container button {
     margin: 0 5px;
 }
@@ -138,6 +150,8 @@ button:hover { background-color: #c3b091; }
 
 #category-links {
     margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px dashed #a08c6e;
 }
 
 #category-links a {
@@ -156,6 +170,8 @@ button:hover { background-color: #c3b091; }
 #search-container {
     margin-top: 1em;
     display: flex;
+    padding-top: 0.5em;
+    border-top: 1px dashed #a08c6e;
 }
 
 #search-input {

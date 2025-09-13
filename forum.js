@@ -123,8 +123,13 @@ function renderNewPostForm(container) {
 
         const postCounterRef = doc(db, "internal", "postCounter");
         const postCounterSnap = await getDoc(postCounterRef);
-        const newPostNumber = (postCounterSnap.exists() ? postCounterSnap.data().count : 0) + 1;
-        await updateDoc(postCounterRef, { count: newPostNumber });
+        let newPostNumber = 1;
+        if (postCounterSnap.exists()) {
+            newPostNumber = postCounterSnap.data().count + 1;
+            await updateDoc(postCounterRef, { count: newPostNumber });
+        } else {
+            await setDoc(postCounterRef, { count: newPostNumber });
+        }
 
         await addDoc(collection(db, "posts"), {
             postNumber: newPostNumber,
