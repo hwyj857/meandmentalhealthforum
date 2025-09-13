@@ -114,12 +114,12 @@ function renderNewPostForm(container) {
             return;
         }
 
-        let imageUrl = null;
-        if (imageFile) {
-            const storageRef = ref(storage, `images/${Date.now()}_${imageFile.name}`);
-            await uploadBytes(storageRef, imageFile);
-            imageUrl = await getDownloadURL(storageRef);
-        }
+        let imageUrl = null; // Image uploads are temporarily disabled
+        // if (imageFile) {
+        //     const storageRef = ref(storage, `images/${Date.now()}_${imageFile.name}`);
+        //     await uploadBytes(storageRef, imageFile);
+        //     imageUrl = await getDownloadURL(storageRef);
+        // }
 
         const postCounterRef = doc(db, "internal", "postCounter");
         const postCounterSnap = await getDoc(postCounterRef);
@@ -264,4 +264,5 @@ export function showForumView(user, container) {
 
     renderNewPostForm(container);
     renderPosts(null, null, container);
+}   renderPosts(null, null, container);
 }
