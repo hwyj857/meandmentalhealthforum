@@ -1,7 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const contentContainer = document.getElementById('content-container');
 let currentUser = null;
 
 async function renderBlogPosts(container) {
@@ -24,7 +23,7 @@ async function renderBlogPosts(container) {
     });
 }
 
-function renderNewBlogPostForm() {
+function renderNewBlogPostForm(container) {
     if (currentUser && currentUser.isAdmin) {
         const newPostContainer = document.createElement('div');
         newPostContainer.innerHTML = `
@@ -33,11 +32,11 @@ function renderNewBlogPostForm() {
             <textarea id="blog-content" rows="10" placeholder="blog content..."></textarea>
             <button id="submit-blog-post">submit post</button>
         `;
-        contentContainer.appendChild(newPostContainer);
+        container.appendChild(newPostContainer);
 
-        document.getElementById('submit-blog-post').addEventListener('click', async () => {
-            const title = document.getElementById('blog-title').value;
-            const content = document.getElementById('blog-content').value;
+        newPostContainer.querySelector('#submit-blog-post').addEventListener('click', async () => {
+            const title = newPostContainer.querySelector('#blog-title').value;
+            const content = newPostContainer.querySelector('#blog-content').value;
 
             if (!title || !content) {
                 alert('title and content cannot be empty.');
@@ -52,16 +51,14 @@ function renderNewBlogPostForm() {
                 createdAt: serverTimestamp()
             });
             
-            showBlogView(currentUser); // Refresh view
+            showBlogView(currentUser, container); // Refresh view
         });
     }
 }
 
 export function showBlogView(user, container) {
     currentUser = user;
-    contentContainer.innerHTML = '<h2>blog</h2>';
-    renderNewBlogPostForm();
-    renderBlogPosts();
-}
-iner);
+    container.innerHTML = '<h2>blog</h2>';
+    renderNewBlogPostForm(container);
+    renderBlogPosts(container);
 }

@@ -2,7 +2,6 @@ import { db, storage } from './firebase-config.js';
 import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, doc, getDoc, updateDoc, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-const contentContainer = document.getElementById('content-container');
 const categories = ['cats', 'mental health', 'general', 'help', 'loneliness', 'art', 'music'];
 let currentUser = null;
 let lastVisiblePost = null;
@@ -21,7 +20,6 @@ async function renderPosts(category = null, searchTerm = null, container) {
             const pinnedQuery = query(collection(db, "posts"), where("pinned", "==", true));
             const pinnedSnapshot = await getDocs(pinnedQuery);
             for (const postDoc of pinnedSnapshot.docs) {
-                // render single post, slightly different style for pinned
                 const post = postDoc.data();
                 const postEl = document.createElement('div');
                 postEl.className = 'post pinned';
@@ -49,8 +47,6 @@ async function renderPosts(category = null, searchTerm = null, container) {
         if (!isNaN(searchNumber)) {
             postQuery = query(postsRef, where("postNumber", "==", searchNumber));
         } else {
-            // This is not a true text search. It only finds posts that START WITH the search term.
-            // For a real search experience, you need a dedicated search service like Algolia.
             postQuery = query(postsRef, where("text", ">=", searchTerm), where("text", "<=", searchTerm + '\uf8ff'));
         }
     } else if (category) {
@@ -59,7 +55,7 @@ async function renderPosts(category = null, searchTerm = null, container) {
         postQuery = query(postsRef, orderBy("lastActivity", "desc"), limit(10));
     }
 
-    if (lastVisiblePost && !searchTerm) { // Can't paginate search easily
+    if (lastVisiblePost && !searchTerm) {
         postQuery = query(postQuery, startAfter(lastVisiblePost));
     }
 
@@ -125,8 +121,6 @@ function renderNewPostForm(container) {
             imageUrl = await getDownloadURL(storageRef);
         }
 
-        // This is a simplified way to get a unique post number. 
-        // A more robust solution would use a Cloud Function transaction.
         const postCounterRef = doc(db, "internal", "postCounter");
         const postCounterSnap = await getDoc(postCounterRef);
         const newPostNumber = (postCounterSnap.exists() ? postCounterSnap.data().count : 0) + 1;
@@ -192,7 +186,6 @@ async function toggleComments(postId, container) {
                     createdAt: serverTimestamp()
                 });
 
-                // Update lastActivity and commentCount on parent post
                 const postRef = doc(db, "posts", postId);
                 const postSnap = await getDoc(postRef);
                 const currentCount = postSnap.data().commentCount || 0;
@@ -217,12 +210,15 @@ export function showForumView(user, container) {
         <div id="forum-header">
             <div id="category-links">
                 <a href="#" data-category="all">all</a>
-                ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-            </select>
+                ${categories.map(c => `<a href="#" data-category="${c}">${c}</a>`).join('')}
+            </div>
+            <div id="search-container">
+                <input type="text" id="search-input" placeholder="search by keyword or post #">
+                <button id="search-button">search</button>
+            </div>
         </div>
-        <textarea id="post-text" placeholder="your post..."></textarea>
-        <input type="file" id="post-image" accept="image/*">
-        <button id="submit-post">submit</button>
+        <div id="posts-container"></div>
+        <div id="new-post-container"></div>
     `;
     container.innerHTML = forumHtml;
 
@@ -239,7 +235,6 @@ export function showForumView(user, container) {
         const searchTerm = container.querySelector('#search-input').value;
         if (searchTerm) {
             lastVisiblePost = null; // Reset pagination
-            // This is a simplified search. For full-text search, a service like Algolia is recommended.
             renderPosts(null, searchTerm, container);
         }
     });
@@ -270,189 +265,3 @@ export function showForumView(user, container) {
     renderNewPostForm(container);
     renderPosts(null, null, container);
 }
-
-function renderNewPostForm() {
-    const newPostContainer = document.getElementById('new-post-container');
-    if (!currentUser) {
-        newPostContainer.innerHTML = '';
-        return;
-    }
-    newPostContainer.innerHTML = `
-        <h4>create a new post</h4>
-        <select id="post-category">
-            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-        </select>
-        <textarea id="post-text" placeholder="your post..."></textarea>
-        <input type="file" id="post-image" accept="image/*">
-        <button id="submit-post">submit</button>
-    `;
-
-    document.getElementById('submit-post').addEventListener('click', async () => {
-        const text = document.getElementById('post-text').value;
-        const category = document.getElementById('post-category').value;
-        const imageFile = document.getElementById('post-image').files[0];
-
-        if (!text) {
-            alert('post text cannot be empty.');
-            return;
-        }
-
-        let imageUrl = null;
-        if (imageFile) {
-            const storageRef = ref(storage, `images/${Date.now()}_${imageFile.name}`);
-            await uploadBytes(storageRef, imageFile);
-            imageUrl = await getDownloadURL(storageRef);
-        }
-
-        // This is a simplified way to get a unique post number. 
-        // A more robust solution would use a Cloud Function transaction.
-        const postCounterRef = doc(db, "internal", "postCounter");
-        const postCounterSnap = await getDoc(postCounterRef);
-        const newPostNumber = (postCounterSnap.exists() ? postCounterSnap.data().count : 0) + 1;
-        await updateDoc(postCounterRef, { count: newPostNumber });
-
-        await addDoc(collection(db, "posts"), {
-            postNumber: newPostNumber,
-            authorName: currentUser.displayName,
-            authorId: currentUser.uid,
-            text,
-            category,
-            imageUrl,
-            createdAt: serverTimestamp(),
-            lastActivity: serverTimestamp(),
-            commentCount: 0
-        });
-
-        document.getElementById('post-text').value = '';
-        document.getElementById('post-image').value = '';
-        lastVisiblePost = null; // Reset for refresh
-        renderPosts();
-    });
-}
-
-async function toggleComments(postId) {
-    const commentsContainer = document.getElementById(`comments-${postId}`);
-    if (commentsContainer.style.display === 'none') {
-        commentsContainer.style.display = 'block';
-        commentsContainer.innerHTML = 'loading comments...';
-
-        const commentsQuery = query(collection(db, `posts/${postId}/comments`), orderBy("createdAt", "asc"));
-        const querySnapshot = await getDocs(commentsQuery);
-        
-        commentsContainer.innerHTML = ''; // Clear loading text
-
-        querySnapshot.forEach(commentDoc => {
-            const comment = commentDoc.data();
-            const commentEl = document.createElement('div');
-            commentEl.className = 'comment';
-            commentEl.innerHTML = `
-                <b>${comment.authorName}:</b>
-                <p>${comment.text}</p>
-            `;
-            commentsContainer.appendChild(commentEl);
-        });
-
-        if (currentUser) {
-            const newCommentForm = document.createElement('div');
-            newCommentForm.innerHTML = `
-                <textarea id="new-comment-${postId}" placeholder="add a comment..."></textarea>
-                <button id="submit-comment-${postId}">submit</button>
-            `;
-            commentsContainer.appendChild(newCommentForm);
-
-            document.getElementById(`submit-comment-${postId}`).addEventListener('click', async () => {
-                const text = document.getElementById(`new-comment-${postId}`).value;
-                if (!text) return;
-
-                await addDoc(collection(db, `posts/${postId}/comments`), {
-                    authorName: currentUser.displayName,
-                    authorId: currentUser.uid,
-                    text,
-                    createdAt: serverTimestamp()
-                });
-
-                // Update lastActivity and commentCount on parent post
-                const postRef = doc(db, "posts", postId);
-                const postSnap = await getDoc(postRef);
-                const currentCount = postSnap.data().commentCount || 0;
-                await updateDoc(postRef, { 
-                    lastActivity: serverTimestamp(),
-                    commentCount: currentCount + 1
-                });
-
-                toggleComments(postId); // Refresh comments
-                toggleComments(postId);
-            });
-        }
-
-    } else {
-        commentsContainer.style.display = 'none';
-    }
-}
-
-export function showForumView(user) {
-    currentUser = user;
-    let forumHtml = `
-        <div id="forum-header">
-            <div id="category-links">
-                <a href="#" data-category="all">all</a>
-                ${categories.map(c => `<a href="#" data-category="${c}">${c}</a>`).join('')}
-            </div>
-            <div id="search-container">
-                <input type="text" id="search-input" placeholder="search by keyword or post #">
-                <button id="search-button">search</button>
-            </div>
-        </div>
-        <div id="posts-container"></div>
-        <div id="new-post-container"></div>
-    `;
-    container.innerHTML = forumHtml;
-
-    document.getElementById('category-links').addEventListener('click', e => {
-        if (e.target.tagName === 'A') {
-            e.preventDefault();
-            const category = e.target.dataset.category === 'all' ? null : e.target.dataset.category;
-            lastVisiblePost = null; // Reset pagination
-            renderPosts(category);
-        }
-    });
-
-    document.getElementById('search-button').addEventListener('click', () => {
-        const searchTerm = document.getElementById('search-input').value;
-        if (searchTerm) {
-            lastVisiblePost = null; // Reset pagination
-            // This is a simplified search. For full-text search, a service like Algolia is recommended.
-            renderPosts(null, searchTerm);
-        }
-    });
-
-    document.getElementById('posts-container').addEventListener('click', async e => {
-        if (e.target.classList.contains('comment-link')) {
-            e.preventDefault();
-            toggleComments(e.target.dataset.id);
-        }
-        if (e.target.classList.contains('pin-post')) {
-            e.preventDefault();
-            const postId = e.target.dataset.id;
-            const postRef = doc(db, "posts", postId);
-            const postSnap = await getDoc(postRef);
-            const isPinned = postSnap.data().pinned || false;
-            await updateDoc(postRef, { pinned: !isPinned });
-            lastVisiblePost = null; // Refresh
-            renderPosts();
-        }
-    });
-
-    window.onscroll = () => {
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 2) {
-            renderPosts(); // Load more on scroll
-        }
-    };
-
-    renderNewPostForm();
-    renderPosts();
-}
-
-renderPosts();
-}
-

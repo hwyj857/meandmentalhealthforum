@@ -2,20 +2,6 @@ import { db } from './firebase-config.js';
 import { collection, query, orderBy, limitToLast, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let currentUser = null;
-
-function renderChat(container) {
-    container.innerHTML = `
-        <h2>real-time chat</h2>
-        <div id="chat-messages"></div>
-        <div id="chat-input-container"></div>
-    `;
-    // more to come
-}
-
-import { db } from './firebase-config.js';
-import { collection, query, orderBy, limitToLast, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-let currentUser = null;
 const dingSound = new Audio('ding.mp3'); // You will need to add a 'ding.mp3' file to your project folder
 
 function renderChatInput(container) {
@@ -24,7 +10,7 @@ function renderChatInput(container) {
         return;
     }
 
-    container.innerHTML = `
+    container.innerHTML += `
         <input type="text" id="custom-name" placeholder="your name (optional)">
         <input type="text" id="chat-message-input" placeholder="type a message...">
         <button id="send-chat-message">send</button>
@@ -82,10 +68,9 @@ export function showChatroomView(user, container) {
         <div id="chat-input-container"></div>
     `;
 
-    const messagesContainer = document.getElementById('chat-messages');
-    const inputContainer = document.getElementById('chat-input-container');
+    const inputContainer = container.querySelector('#chat-input-container');
+    const messagesContainer = container.querySelector('#chat-messages');
 
     renderChatInput(inputContainer);
     listenForMessages(messagesContainer);
 }
-

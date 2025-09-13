@@ -1,5 +1,3 @@
-const contentContainer = document.getElementById('content-container');
-
 export function showCommunityView(user, container) {
     container.innerHTML = `
         <h2>community</h2>

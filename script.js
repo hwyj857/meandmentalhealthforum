@@ -2,11 +2,13 @@ import { initAuth, onAuthChange } from './auth.js';
 import { showForumView } from './forum.js';
 import { showBlogView } from './blog.js';
 import { showChatroomView } from './chatroom.js';
+import { showCommunityView } from './community.js';
 
 const homeTab = document.getElementById('home-tab');
 const forumTab = document.getElementById('forum-tab');
 const blogTab = document.getElementById('blog-tab');
 const chatroomTab = document.getElementById('chatroom-tab');
+const communityTab = document.getElementById('community-tab'); // FIX: Define communityTab
 
 const homeContent = document.getElementById('home-content');
 const forumContent = document.createElement('div');
@@ -15,8 +17,10 @@ const blogContent = document.createElement('div');
 blogContent.id = 'blog-content';
 const chatroomContent = document.createElement('div');
 chatroomContent.id = 'chatroom-content';
+const communityContent = document.createElement('div'); // FIX: Define communityContent
+communityContent.id = 'community-content';
 
-document.getElementById('content-container').append(forumContent, blogContent, chatroomContent);
+document.getElementById('content-container').append(forumContent, blogContent, chatroomContent, communityContent); // FIX: Append communityContent
 
 let currentUser = null;
 
@@ -30,6 +34,7 @@ function switchTab(activeTab) {
     forumContent.style.display = 'none';
     blogContent.style.display = 'none';
     chatroomContent.style.display = 'none';
+    communityContent.style.display = 'none'; // FIX: Hide communityContent
 
     if (activeTab === homeTab) {
         homeContent.style.display = 'block';
@@ -78,5 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
     chatroomTab.addEventListener('click', (e) => {
         e.preventDefault();
         switchTab(chatroomTab);
+    });
+
+    communityTab.addEventListener('click', (e) => { // FIX: Add event listener for communityTab
+        e.preventDefault();
+        switchTab(communityTab);
     });
 });

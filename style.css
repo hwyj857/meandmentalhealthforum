@@ -18,7 +18,7 @@ header {
     margin-bottom: 1em;
 }
 
-nav a {
+nav a, nav span {
     margin: 0 1em;
     font-size: 1.2em;
 }
@@ -93,6 +93,6 @@ button:hover { background-color: #c3b091; }
 }
 
 /* content visibility */
-#forum-content, #blog-content, #chatroom-content {
+#forum-content, #blog-content, #chatroom-content, #community-content {
     display: none;
 }
