@@ -73,12 +73,26 @@ button:hover { background-color: #c3b091; }
     margin-top: 0.5em;
 }
 
+/* chatroom */
+#chat-messages {
+    height: 400px;
+    overflow-y: scroll;
+    border: 1px solid #a08c6e;
+    padding: 1em;
+    background-color: #f5f5f5;
+    margin-bottom: 1em;
+}
+
+#chat-input-container input {
+    width: 60%;
+}
+
 /* auth */
 #auth-container button {
     margin: 0 5px;
 }
 
 /* content visibility */
-#forum-content, #blog-content {
+#forum-content, #blog-content, #chatroom-content {
     display: none;
 }

@@ -5,6 +5,7 @@ import { showBlogView } from './blog.js';
 const homeTab = document.getElementById('home-tab');
 const forumTab = document.getElementById('forum-tab');
 const blogTab = document.getElementById('blog-tab');
+const chatroomTab = document.getElementById('chatroom-tab');
 
 const homeContent = document.getElementById('home-content');
 const forumContent = document.createElement('div');
@@ -59,5 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     blogTab.addEventListener('click', (e) => {
         e.preventDefault();
         switchTab(blogTab);
+    });
+});
+ventDefault();
+        switchTab(chatroomTab);
     });
 });
