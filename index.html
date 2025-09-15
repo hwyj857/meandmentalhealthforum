@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mental health and cats forum</title>
-    <link rel="stylesheet" href="style.css">
+    <link id="theme-style" rel="stylesheet" href="dark.css">
 </head>
 <body>
     <header>
@@ -16,9 +16,12 @@
             <a href="#" id="blog-tab">blog</a>
             <a href="#" id="chatroom-tab">chatroom</a>
             <a href="#" id="community-tab">community</a>
+            <a href="#" id="minecraft-tab">minecraft</a>
             <a href="https://discord.gg/k2RtAZyMT8" target="_blank">discord server</a>
-            <span>minecraft server: 65.109.36.111:25000</span>
         </nav>
+        <div id="theme-switcher">
+            <button id="theme-toggle">switch theme</button>
+        </div>
         <div id="auth-container">
             <!-- auth buttons will be injected here -->
         </div>
@@ -48,6 +51,13 @@
             <!-- forum or blog content will be injected here -->
         </div>
 
-    <script type="module" src="script.js"></script>
+        <script src="firebase-loader.js"></script>
+    <script type="module">
+        loadFirebase(() => {
+            import('./script.js').then(module => {
+                module.main();
+            });
+        });
+    </script>
 </body>
 </html>

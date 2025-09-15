@@ -1,5 +1,4 @@
 import { db } from './firebase-config.js';
-import { collection, query, orderBy, limitToLast, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let currentUser = null;
 const dingSound = new Audio('ding.mp3'); // You will need to add a 'ding.mp3' file to your project folder
@@ -34,29 +33,30 @@ function renderChatInput(container) {
     });
 }
 
-function listenForMessages(container) {
+function listenForMessages(messagesContainer) {
     const chatQuery = query(collection(db, "chatroom"), orderBy("createdAt", "desc"), limitToLast(40));
 
     onSnapshot(chatQuery, (snapshot) => {
-        const messagesContainer = container.querySelector('#chat-messages');
-        messagesContainer.innerHTML = '';
-        const messages = [];
-        snapshot.forEach(doc => messages.push(doc.data()));
-        
-        // since the query is desc, we reverse it to show oldest first
-        messages.reverse().forEach(msg => {
-            const msgEl = document.createElement('div');
-            msgEl.className = 'chat-message';
-            msgEl.innerHTML = `<b>${msg.authorName}:</b> ${msg.text}`;
-            messagesContainer.appendChild(msgEl);
+        requestAnimationFrame(() => {
+            messagesContainer.innerHTML = '';
+            const messages = [];
+            snapshot.forEach(doc => messages.push(doc.data()));
+            
+            // since the query is desc, we reverse it to show oldest first
+            messages.reverse().forEach(msg => {
+                const msgEl = document.createElement('div');
+                msgEl.className = 'chat-message';
+                msgEl.innerHTML = `<b>${msg.authorName}:</b> ${msg.text}`;
+                messagesContainer.appendChild(msgEl);
+            });
+
+            // Play sound if the new message isn't from the current user
+            if (messages.length > 0 && messages[messages.length - 1].authorName !== currentUser.displayName) {
+                dingSound.play().catch(e => console.log("sound play failed. user interaction needed."));
+            }
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
-
-        // Play sound if the new message isn't from the current user
-        if (messages.length > 0 && messages[messages.length - 1].authorName !== currentUser.displayName) {
-            dingSound.play().catch(e => console.log("sound play failed. user interaction needed."));
-        }
-
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 }
 

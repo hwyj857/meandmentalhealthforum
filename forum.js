@@ -1,8 +1,6 @@
-import { db, storage } from './firebase-config.js';
-import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, doc, getDoc, updateDoc, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+const { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp, doc, getDoc, updateDoc, limit, startAfter, setDoc } = firebase.firestore;
+const { ref, uploadBytes, getDownloadURL } = firebase.storage;
 
-const categories = ['cats', 'mental health', 'general', 'help', 'loneliness', 'art', 'music'];
 let currentUser = null;
 let lastVisiblePost = null;
 let isLoading = false;
@@ -88,10 +86,10 @@ async function renderPosts(category = null, searchTerm = null, container) {
     isLoading = false;
 }
 
-function renderNewPostForm(container) {
+function renderNewPostForm(container, categories) {
     const newPostContainer = container.querySelector('#new-post-container');
     if (!currentUser) {
-        newPostContainer.innerHTML = '';
+        newPostContainer.innerHTML = '<p>Please log in to create a post.</p>';
         return;
     }
     newPostContainer.innerHTML = `
@@ -207,7 +205,7 @@ async function toggleComments(postId, container) {
     }
 }
 
-export function showForumView(user, container) {
+export function showForumView(user, container, categories) {
     currentUser = user;
     let forumHtml = `
         <div id="forum-header">
@@ -265,7 +263,6 @@ export function showForumView(user, container) {
         }
     };
 
-    renderNewPostForm(container);
+    renderNewPostForm(container, categories);
     renderPosts(null, null, container);
-}   renderPosts(null, null, container);
 }

@@ -1,12 +1,9 @@
 import { db } from './firebase-config.js';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let currentUser = null;
 
-async function renderBlogPosts(container) {
-    const postsContainer = document.createElement('div');
-    container.appendChild(postsContainer);
-
+async function renderBlogPosts(postsContainer) {
+    postsContainer.innerHTML = ''; // Clear previous posts
     const blogQuery = query(collection(db, "blogPosts"), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(blogQuery);
 
@@ -23,20 +20,18 @@ async function renderBlogPosts(container) {
     });
 }
 
-function renderNewBlogPostForm(container) {
+function renderNewBlogPostForm(formContainer, postsContainer) {
     if (currentUser && currentUser.isAdmin) {
-        const newPostContainer = document.createElement('div');
-        newPostContainer.innerHTML = `
+        formContainer.innerHTML = `
             <h4>write a new blog post</h4>
             <input type="text" id="blog-title" placeholder="post title">
             <textarea id="blog-content" rows="10" placeholder="blog content..."></textarea>
             <button id="submit-blog-post">submit post</button>
         `;
-        container.appendChild(newPostContainer);
 
-        newPostContainer.querySelector('#submit-blog-post').addEventListener('click', async () => {
-            const title = newPostContainer.querySelector('#blog-title').value;
-            const content = newPostContainer.querySelector('#blog-content').value;
+        formContainer.querySelector('#submit-blog-post').addEventListener('click', async () => {
+            const title = formContainer.querySelector('#blog-title').value;
+            const content = formContainer.querySelector('#blog-content').value;
 
             if (!title || !content) {
                 alert('title and content cannot be empty.');
@@ -51,14 +46,26 @@ function renderNewBlogPostForm(container) {
                 createdAt: serverTimestamp()
             });
             
-            showBlogView(currentUser, container); // Refresh view
+            formContainer.querySelector('#blog-title').value = '';
+            formContainer.querySelector('#blog-content').value = '';
+            renderBlogPosts(postsContainer); // Refresh posts list
         });
+    } else {
+        formContainer.innerHTML = '';
     }
 }
 
 export function showBlogView(user, container) {
     currentUser = user;
-    container.innerHTML = '<h2>blog</h2>';
-    renderNewBlogPostForm(container);
-    renderBlogPosts(container);
+    container.innerHTML = `
+        <h2>blog</h2>
+        <div id="new-blog-post-container"></div>
+        <div id="blog-posts-container"></div>
+    `;
+
+    const formContainer = container.querySelector('#new-blog-post-container');
+    const postsContainer = container.querySelector('#blog-posts-container');
+
+    renderNewBlogPostForm(formContainer, postsContainer);
+    renderBlogPosts(postsContainer);
 }
