@@ -61,7 +61,6 @@ function switchTab(activeTab) {
     }
 }
 
-// Initial setup when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     try {
         console.log('dom content loaded');
