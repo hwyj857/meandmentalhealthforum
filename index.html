@@ -1,63 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>mental health and cats forum</title>
-    <link id="theme-style" rel="stylesheet" href="dark.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mental health and cats forum - a safe place <3</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="container">
     <header>
-        <h1>mental health and cats forum</h1>
-        <p>a safe place &lt;3</p>
-        <nav>
-            <a href="#" id="home-tab" class="active-tab">home</a>
-            <a href="#" id="forum-tab">forum</a>
-            <a href="#" id="blog-tab">blog</a>
-            <a href="#" id="chatroom-tab">chatroom</a>
-            <a href="#" id="community-tab">community</a>
-            <a href="#" id="minecraft-tab">minecraft</a>
-            <a href="https://discord.gg/k2RtAZyMT8" target="_blank">discord server</a>
-        </nav>
-        <div id="theme-switcher">
-            <button id="theme-toggle">switch theme</button>
-        </div>
-        <div id="auth-container">
-            <!-- auth buttons will be injected here -->
-        </div>
+      <h1>mental health and cats forum</h1>
+      <p class="motto">a safe place <3</p>
+      <div class="auth-buttons">
+        <button id="login-btn">login</button>
+        <button id="register-btn">register</button>
+        <button id="logout-btn" style="display:none;">logout</button>
+      </div>
     </header>
 
-    <main>
-        <div id="content-container">
-            <div id="home-content">
-                <h2>welcome to the mental health and cats forum</h2>
-                <p>a safe place &lt;3</p>
-                <p>
-                    hey, welcome. this is a safe place for people who are struggling and need a community. or for people who just like cats. or both.
-                </p>
-                <p>
-                    here's what you can do:
-                </p>
-                <ul>
-                    <li>check out the <b>forum</b> to talk with others.</li>
-                    <li>read our <b>blog</b> for articles and thoughts.</li>
-                    <li>join our <b>discord server</b>.</li>
-                    <li>check out our <b>community</b> page for minecraft server details and more!</li>
-                </ul>
-                <p>
-                    log in to post, comment, and join the conversation. be kind to each other.
-                </p>
-            </div>
-            <!-- forum or blog content will be injected here -->
-        </div>
+    <nav>
+      <ul>
+        <li><a href="#" class="active" data-category="all">all posts</a></li>
+        <li><a href="#" data-category="cats">cats</a></li>
+        <li><a href="#" data-category="mental health">mental health</a></li>
+        <li><a href="#" data-category="general">general</a></li>
+        <li><a href="#" data-category="help">help</a></li>
+        <li><a href="#" data-category="loneliness">loneliness</a></li>
+        <li><a href="#" data-category="art">art</a></li>
+        <li><a href="#" data-category="music">music</a></li>
+      </ul>
+    </nav>
 
-        <script src="firebase-loader.js"></script>
-    <script type="module">
-        loadFirebase(() => {
-            import('./script.js').then(module => {
-                module.main();
-            });
-        });
-    </script>
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="search by keyword or post number...">
+      <button id="search-btn">search</button>
+    </div>
+
+    <div class="post-form-container" id="post-form-container">
+      <form id="post-form">
+        <select id="post-category" required>
+          <option value="">select category</option>
+          <option value="cats">cats</option>
+          <option value="mental health">mental health</option>
+          <option value="general">general</option>
+          <option value="help">help</option>
+          <option value="loneliness">loneliness</option>
+          <option value="art">art</option>
+          <option value="music">music</option>
+        </select>
+        <input type="text" id="post-title" placeholder="title" required>
+        <textarea id="post-content" placeholder="your thoughts..." required></textarea>
+        <input type="file" id="post-image" accept="image/*">
+        <button type="submit">post</button>
+      </form>
+    </div>
+
+    <div class="posts-container" id="posts-container">
+      <!-- Posts will be loaded here -->
+    </div>
+
+    <div class="load-more-container">
+      <button id="load-more-btn">load more</button>
+    </div>
+  </div>
+
+  <!-- Auth Modals -->
+  <div id="login-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>login</h2>
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="email" required>
+        <input type="password" id="login-password" placeholder="password" required>
+        <button type="submit">login</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="register-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>register</h2>
+      <form id="register-form">
+        <input type="email" id="register-email" placeholder="email" required>
+        <input type="password" id="register-password" placeholder="password" required>
+        <button type="submit">register</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="posts.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
