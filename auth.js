@@ -1,107 +1,44 @@
-import { 
-  auth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut 
-} from './firebase-config.js';
+import { auth } from './firebase-config.js';
 
-// DOM elements
-const loginBtn = document.getElementById('login-btn');
-const registerBtn = document.getElementById('register-btn');
-const logoutBtn = document.getElementById('logout-btn');
-const loginModal = document.getElementById('login-modal');
-const registerModal = document.getElementById('register-modal');
-const closeButtons = document.querySelectorAll('.close');
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
+let authContainer;
 
-// Open modals
-loginBtn.addEventListener('click', () => {
-  loginModal.style.display = 'block';
-});
-
-registerBtn.addEventListener('click', () => {
-  registerModal.style.display = 'block';
-});
-
-// Close modals
-closeButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    loginModal.style.display = 'none';
-    registerModal.style.display = 'none';
-  });
-});
-
-// Close when clicking outside modal
-window.addEventListener('click', (event) => {
-  if (event.target === loginModal) {
-    loginModal.style.display = 'none';
-  }
-  if (event.target === registerModal) {
-    registerModal.style.display = 'none';
-  }
-});
-
-// Login
-loginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      loginModal.style.display = 'none';
-      updateAuthUI();
-    })
-    .catch(error => {
-      alert(error.message);
-    });
-});
-
-// Register
-registerForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = document.getElementById('register-email').value;
-  const password = document.getElementById('register-password').value;
-
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      registerModal.style.display = 'none';
-      updateAuthUI();
-    })
-    .catch(error => {
-      alert(error.message);
-    });
-});
-
-// Logout
-logoutBtn.addEventListener('click', () => {
-  signOut(auth).then(() => {
-    updateAuthUI();
-  }).catch(error => {
-    alert(error.message);
-  });
-});
-
-// Update UI based on auth state
-export function updateAuthUI() {
-  const user = auth.currentUser;
-  const postFormContainer = document.getElementById('post-form-container');
-
-  if (user) {
-    loginBtn.style.display = 'none';
-    registerBtn.style.display = 'none';
-    logoutBtn.style.display = 'block';
-    postFormContainer.style.display = 'block';
-  } else {
-    loginBtn.style.display = 'block';
-    registerBtn.style.display = 'block';
-    logoutBtn.style.display = 'none';
-    postFormContainer.style.display = 'none';
-  }
+export function initAuth() {
+    authContainer = document.getElementById('auth-container');
+    renderAuthButtons();
 }
 
-// Initialize auth state listener
-auth.onAuthStateChanged(user => {
-  updateAuthUI();
-});
+function renderAuthButtons() {
+    authContainer.innerHTML = `
+        <button id="google-login">Login with Google</button>
+        <button id="anonymous-login">Login Anonymously</button>
+        <button id="logout" style="display: none;">Logout</button>
+    `;
+
+    authContainer.querySelector('#google-login').addEventListener('click', async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithPopup(provider);
+    });
+
+    authContainer.querySelector('#anonymous-login').addEventListener('click', async () => {
+        await auth.signInAnonymously();
+    });
+
+    authContainer.querySelector('#logout').addEventListener('click', async () => {
+        await auth.signOut();
+    });
+}
+
+export function onAuthChange(callback) {
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            authContainer.querySelector('#google-login').style.display = 'none';
+            authContainer.querySelector('#anonymous-login').style.display = 'none';
+            authContainer.querySelector('#logout').style.display = 'inline-block';
+        } else {
+            authContainer.querySelector('#google-login').style.display = 'inline-block';
+            authContainer.querySelector('#anonymous-login').style.display = 'inline-block';
+            authContainer.querySelector('#logout').style.display = 'none';
+        }
+        callback(user);
+    });
+}

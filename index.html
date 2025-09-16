@@ -1,97 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>mental health and cats forum - a safe place <3</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Forum</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
     <header>
-      <h1>mental health and cats forum</h1>
-      <p class="motto">a safe place <3</p>
-      <div class="auth-buttons">
-        <button id="login-btn">login</button>
-        <button id="register-btn">register</button>
-        <button id="logout-btn" style="display:none;">logout</button>
-      </div>
+        <h1>Basic Forum</h1>
+        <div id="auth-container">
+            <!-- Auth buttons will be injected here -->
+        </div>
     </header>
 
-    <nav>
-      <ul>
-        <li><a href="#" class="active" data-category="all">all posts</a></li>
-        <li><a href="#" data-category="cats">cats</a></li>
-        <li><a href="#" data-category="mental health">mental health</a></li>
-        <li><a href="#" data-category="general">general</a></li>
-        <li><a href="#" data-category="help">help</a></li>
-        <li><a href="#" data-category="loneliness">loneliness</a></li>
-        <li><a href="#" data-category="art">art</a></li>
-        <li><a href="#" data-category="music">music</a></li>
-      </ul>
-    </nav>
+    <main>
+        <div id="forum-content">
+            <!-- Forum posts and new post form will be injected here -->
+        </div>
+    </main>
 
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="search by keyword or post number...">
-      <button id="search-btn">search</button>
-    </div>
-
-    <div class="post-form-container" id="post-form-container">
-      <form id="post-form">
-        <select id="post-category" required>
-          <option value="">select category</option>
-          <option value="cats">cats</option>
-          <option value="mental health">mental health</option>
-          <option value="general">general</option>
-          <option value="help">help</option>
-          <option value="loneliness">loneliness</option>
-          <option value="art">art</option>
-          <option value="music">music</option>
-        </select>
-        <input type="text" id="post-title" placeholder="title" required>
-        <textarea id="post-content" placeholder="your thoughts..." required></textarea>
-        <input type="file" id="post-image" accept="image/*">
-        <button type="submit">post</button>
-      </form>
-    </div>
-
-    <div class="posts-container" id="posts-container">
-      <!-- Posts will be loaded here -->
-    </div>
-
-    <div class="load-more-container">
-      <button id="load-more-btn">load more</button>
-    </div>
-  </div>
-
-  <!-- Auth Modals -->
-  <div id="login-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>login</h2>
-      <form id="login-form">
-        <input type="email" id="login-email" placeholder="email" required>
-        <input type="password" id="login-password" placeholder="password" required>
-        <button type="submit">login</button>
-      </form>
-    </div>
-  </div>
-
-  <div id="register-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>register</h2>
-      <form id="register-form">
-        <input type="email" id="register-email" placeholder="email" required>
-        <input type="password" id="register-password" placeholder="password" required>
-        <button type="submit">register</button>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="auth.js"></script>
-  <script type="module" src="posts.js"></script>
-  <script type="module" src="app.js"></script>
+    <script src="firebase-loader.js"></script>
+    <script type="module">
+        loadFirebase(() => {
+            import('./script.js').then(module => {
+                module.main();
+            });
+        });
+    </script>
 </body>
 </html>
